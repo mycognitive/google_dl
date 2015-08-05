@@ -1,0 +1,3 @@
+[submodule "xgoogle"]
+	path = xgoogle
+	url = https://github.com/kenorb/xgoogle.git
