@@ -24,6 +24,7 @@ class GoogleDl():
         self.gs = GoogleSearch(query)
         self.gs.results_per_page = int(resultsperpage)
         self.maxresults = int(maxresults)
+        self.lastpage = False
 
     def getTotal(self):
         return len(self.results)
@@ -49,12 +50,16 @@ class GoogleDl():
 
 
     def __next__(self):
-        if self.count >= self.maxresults:
+        if self.lastpage or self.count >= self.maxresults:
             raise StopIteration
 
         results = self.gs.get_results()
+
         if not results:
             raise StopIteration
+        if len(results) < self.gs.results_per_page:
+            self.lastpage = True
+
         self.count += len(results)
         return results
 
@@ -129,7 +134,7 @@ if __name__ == '__main__':
         #print("Query: %s" % (query) if args.verbose else "")
         i = 1
         for results in page:
-            print("Trying to download results from page #%d  (results %d-%d)" % (i, (i - 1)*page.gs.results_per_page + 1, i*page.gs.results_per_page))
+            print("Trying to download results from page #%d  (results %d-%d)" % (i, (i - 1)*page.gs.results_per_page + 1, min(i*page.gs.results_per_page, (i - 1)*page.gs.results_per_page + len(results))))
             for result in results:
                 url = result.getURL()
                 path = get_path_via_url(url, args.dest, args.dirs)
