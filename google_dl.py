@@ -7,21 +7,25 @@
 import os, sys
 import argparse
 import urllib.request
-from urllib.error import HTTPError,ContentTooShortError
+from urllib.error import URLError, HTTPError, ContentTooShortError
 from xgoogle.search import GoogleSearch, SearchError
 import re
 import socket
 import mimetypes
 
 class GoogleDl():
-    def __init__(self, query, filetype, site, resultsperpage, maxresults):
-        if filetype:
-            query += " filetype:" + filetype
+    def __init__(self, query, filetypes, site, resultsperpage, maxresults):
+        if filetypes:
+            filetypes = re.split(",", filetypes)
+            query += " filetype:" + filetypes.pop(0)
+            for filetype in filetypes:
+                query += " OR filetype:" + filetype
+
         if site:
             query += " site:" + site
 
         print(query)
-        self.gs = GoogleSearch(query)
+        self.gs = GoogleSearch(query, random_agent=True)
         self.gs.results_per_page = int(resultsperpage)
         self.maxresults = int(maxresults)
         self.lastpage = False
@@ -30,7 +34,7 @@ class GoogleDl():
         return len(self.results)
 
 
-    def dlFile(self, url, path):
+    def dlFileOld(self, url, path):
         try:
             urllib.request.urlretrieve(url, filename=path)
         except HTTPError as err:
@@ -42,6 +46,25 @@ class GoogleDl():
         except urllib.error.URLError:
             print("Error: Reading socket timed out, try again later.")
             return False
+
+
+    def dlFile(self, url, path):
+        request = urllib.request.Request(url, headers={"User-Agent": self.gs.browser.get_user_agent()})
+        try:
+            with urllib.request.urlopen(request) as i, open(path, "wb") as o:
+                o.write(i.read())
+        except URLError:
+            print("Error: Reading socket timed out, try again later.")
+            return False
+        except HTTPError as err:
+            print("Error: %s, reason: %s." % (err.code, err.reason))
+            return False
+        except ContentTooShortError as err:
+            print("Error: The downloaded data is less than the expected amount, so skipping.")
+            return False
+        except OSError as err:
+            print("Error: %s raised when tried to save the file '%s'" % (err.strerror, err.filename))
+            sys.exit(1)
 
 
     def __iter__(self):
@@ -79,7 +102,7 @@ def get_path_via_url(url, dest = ".", dirs = False):
     # Check whether URL ends with an extension, so we should gather MIME info from response header or not
     extension = re.search("\.(\w+)$", path)
     if extension is None or pseudoPath is not "":
-        request = urllib.request.Request(url=url, method="HEAD")
+        request = urllib.request.Request(url, method="HEAD")
         try:
             response = urllib.request.urlopen(request)
             mimetype = re.search("(\w+/\w+)", dict(response.getheaders())["Content-Type"])
@@ -97,7 +120,7 @@ def get_path_via_url(url, dest = ".", dirs = False):
         return dest + re.split("/", path)[-1]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Parse arguments.
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("-?", "--help",
@@ -109,16 +132,16 @@ if __name__ == '__main__':
     parser.add_argument("-s", "--site",
         action="store",      dest="site", help="Site to search for.", default=None)
     parser.add_argument("-f", "--file-type",
-        action="store",      dest="filetype", help="File type to download.", default=None)
+        action="store",      dest="filetype", help="Comma-separated list of file types to download.", default=None)
     parser.add_argument("-x", "--force-directories",
         action="store_true",      dest="dirs", help="Create a hierarchy of directories based on the URL.")
     parser.add_argument("-t", "--timeout",
         action="store",      dest="timeout", help="Set socket read timeout for downloading in seconds (float).", default=None)
     parser.add_argument("-m", "--max-results",
-        action="store",      dest="maxresults", help="Set maximum results to scrape.", default=100)
+        action="store",      dest="maxresults", help="Set maximum results to scrape.", default=1000)
     parser.add_argument("-p", "--results-per-page",
-        action="store",      dest="resultsperpage", help="Set number of results per page.", default=10)
-    parser.add_argument('query', nargs='+', help="Query to search for.")
+        action="store",      dest="resultsperpage", help="Set number of results per page.", default=50)
+    parser.add_argument("query", nargs="+", help="Query to search for.")
 
     # Build query string
     args = parser.parse_args()
