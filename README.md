@@ -9,7 +9,7 @@ Requirements
 In order to use the script you need to install [Python 3.x](http://www.python.org/getit/) and the following packages:
 
 - setuptools: https://pypi.python.org/pypi/setuptools#installation-instructions
-- xgoogle: https://github.com/kenorb/xgoogle
+- xgoogle: https://github.com/mycognitive/xgoogle
 
 For each package just run:
 
