@@ -14,7 +14,7 @@ import socket
 import mimetypes
 
 class GoogleDl():
-    def __init__(self, query, filetypes, site, resultsperpage, maxresults):
+    def __init__(self, query, filetypes, site, resultsperpage, maxresults, repeat):
         if filetypes:
             filetypes = re.split(",", filetypes)
             query += " filetype:" + filetypes.pop(0)
@@ -25,7 +25,7 @@ class GoogleDl():
             query += " site:" + site
 
         print(query)
-        self.gs = GoogleSearch(query, random_agent=True)
+        self.gs = GoogleSearch(query, random_agent=True, repeat=repeat)
         self.gs.results_per_page = int(resultsperpage)
         self.maxresults = int(maxresults)
         self.lastpage = False
@@ -137,6 +137,8 @@ if __name__ == "__main__":
         action="store_true",      dest="dirs", help="Create a hierarchy of directories based on the URL.")
     parser.add_argument("-t", "--timeout",
         action="store",      dest="timeout", help="Set socket read timeout for downloading in seconds (float).", default=None)
+    parser.add_argument("-r", "--repeat",
+        action="store_true",      dest="repeat", help="Set filter of search results.", default=None)
     parser.add_argument("-m", "--max-results",
         action="store",      dest="maxresults", help="Set maximum results to scrape.", default=1000)
     parser.add_argument("-p", "--results-per-page",
@@ -153,7 +155,7 @@ if __name__ == "__main__":
 
     # Download if doesn't exist locally
     try:
-        page = GoogleDl(query, args.filetype, args.site, args.resultsperpage, args.maxresults)
+        page = GoogleDl(query, args.filetype, args.site, args.resultsperpage, args.maxresults, args.repeat)
         #print("Query: %s" % (query) if args.verbose else "")
         i = 1
         for results in page:
