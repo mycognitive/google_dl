@@ -166,7 +166,7 @@ if __name__ == "__main__":
                 filename = os.path.basename(path)
                 dirname = os.path.dirname(path)
                 os.makedirs(dirname, 0o755, True)
-                print("Downloading '%s' from '%s' into %s..." % (filename, url, dirname))
+                print("Downloading '%s' from '%s' into %s..." % (filename.encode('utf-8').strip(), url.encode('utf-8').strip(), dirname))
                 if os.path.isfile(path):
                     print("File '%s' already exists, skipping." % (path))
                 else:
