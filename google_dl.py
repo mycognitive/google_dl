@@ -80,7 +80,8 @@ class GoogleDl():
 
         if not results:
             raise StopIteration
-        if len(results) < self.gs.results_per_page:
+        # Only stop if no results are returned
+        if len(results) == 0:
             self.lastpage = True
 
         self.count += len(results)
@@ -157,22 +158,27 @@ if __name__ == "__main__":
     try:
         page = GoogleDl(query, args.filetype, args.site, args.resultsperpage, args.maxresults, args.repeat)
         #print("Query: %s" % (query) if args.verbose else "")
-        i = 1
+        n_pages = 1
+        n_results = 0
         for results in page:
-            print("Trying to download results from page #%d  (results %d-%d)" % (i, (i - 1)*page.gs.results_per_page + 1, min(i*page.gs.results_per_page, (i - 1)*page.gs.results_per_page + len(results))))
+            print("Trying to download results from page #%d  (results %d-%d)" % (n_pages, n_results, n_results + len(results)))
+            n_results += len(results)
+            n = 0
             for result in results:
+                n += 1
                 url = result.getURL()
                 path = get_path_via_url(url, args.dest, args.dirs)
                 filename = os.path.basename(path)
                 dirname = os.path.dirname(path)
                 os.makedirs(dirname, 0o755, True)
+                print("Page: %i, File: %i" %  (n_pages, n))
                 print("Downloading '%s' from '%s' into %s..." % (filename.encode('utf-8').strip(), url.encode('utf-8').strip(), dirname))
                 if os.path.isfile(path):
                     print("File '%s' already exists, skipping." % (path.encode('utf-8').strip()))
                 else:
                     page.dlFile(url, path)
-            i += 1
-            print("")
+            n_pages += 1
+        print("Done, downloaded %i files." % n_results)
 
     except KeyboardInterrupt:
         sys.exit()
