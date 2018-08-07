@@ -3,18 +3,26 @@ google_dl
 
 Python script to download files via Google search.
 
-Requirements
+Installation
 ============
 
 In order to use the script you need to install [Python 3.x](http://www.python.org/getit/) and the following packages:
 
-- setuptools: https://pypi.python.org/pypi/setuptools#installation-instructions
-- xgoogle: https://github.com/mycognitive/xgoogle
+- [`setuptools`](https://pypi.python.org/pypi/setuptools#installation-instructions)
 
-For each package just run:
+  For example:
 
-    py setup.py build
-    py setup.py install
+        pip install setuptools
+
+- [`xgoogle`](https://github.com/mycognitive/xgoogle) (included as a git submodule in `xgoogle/`)
+
+  For example:
+
+        git submodule update --init
+        pip install -r xgoogle/requirements.txt
+        python xgoogle/setup.py build
+        python xgoogle/setup.py install
+        pip install -r requirements.txt
 
 Disclaimer
 ==========
